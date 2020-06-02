@@ -102,8 +102,12 @@ def wisty(id, resolution, filename):
     Wistia video downloader command line tool\n
     example: wisty -i f5rf5rfr -r 1080p -n myvideo
     """
+    if(len(sys.argv) == 1):
+        print("missing required arguments: run wisty --help")
+        sys.exit(0)
     getVideos(id, resolution, filename)
 
 
 if __name__ == '__main__':
+
     wisty()
