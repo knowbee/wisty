@@ -1,18 +1,40 @@
 from operator import itemgetter
 import click
-import argparse
 import requests
 import re
-from bs4 import BeautifulSoup
 import json
 import os
 import time
+import sys
 from urllib.request import urlopen
 import math
 my_videos = []
+sorted_videos = []
 
 
-def DownloadVideo(format):
+def download(link, size, filename):
+    print("download process started")
+    with open(filename, 'wb') as f:
+        response = requests.get(link, stream=True)
+        total = response.headers.get('content-length')
+
+        if total is None:
+            f.write(response.content)
+        else:
+            downloaded = 0
+            total = int(total)
+            for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+                downloaded += len(data)
+                f.write(data)
+                done = int(50*downloaded/total)
+                sys.stdout.write('\r[{}{}]'.format(
+                    'o' * done, '.' * (50-done)))
+                sys.stdout.flush()
+    print("download finished!")
+    sys.stdout.write('\n')
+
+
+def VideoFormatter(format, filename):
     with open("data.json") as f:
         for line in f:
             if(".bin" in line):
@@ -22,10 +44,23 @@ def DownloadVideo(format):
                 meta = site.info()
                 my_videos.append(
                     {"url": link, "video_size": math.ceil(int(meta["Content-Length"]) / float(1 << 20))})
-        sorted(my_videos, key=itemgetter('video_size'), reverse=True)
+        sorted_videos = sorted(
+            my_videos, key=itemgetter('video_size'), reverse=True)
+        if("1080" in format):
+            return download(sorted_videos[0]["url"],
+                            sorted_videos[0]["video_size"], filename + ".mp4")
+        elif("720" in format):
+            return download(sorted_videos[1]["url"],
+                            sorted_videos[1]["video_size"], filename + ".mp4")
+        elif("480" in format):
+            return download(sorted_videos[2]["url"],
+                            sorted_videos[2]["video_size"], filename + ".mp4")
+        else:
+            return download(sorted_videos[0]["url"],
+                            sorted_videos[0]["video_size"], filename + ".mp4")
 
 
-def getVideos(id, format):
+def getVideos(id, format, filename):
     page = requests.get("http://fast.wistia.net/embed/iframe/" + id).text
     content = []
     findstr = r'W\.iframeInit\({"assets":(\[.*\])'
@@ -36,21 +71,22 @@ def getVideos(id, format):
         with open('data.txt', "w") as outfile:
             outfile.write(content.split("],")[0] + "]")
             print("got data from wistia")
-    DownloadVideo(format)
+    VideoFormatter(format, filename)
 
 
-@ click.command()
-@ click.option('--id',
-               '-i',
-               help='wistia video id')
+@click.command()
+@click.option('--id',
+              '-i',
+              help='wistia video id')
 @click.option('-f', '--format', default='1080p', help='video quality eg:720p')
-def main(id, format):
+@click.option('-n', '--filename', default='video', help='video name')
+def main(id, format, filename):
     """
     wistia video downloader command line tool\n
     example: python run.py -i f5rf5rfr
     """
     # getVideos(id, format)
-    DownloadVideo(format)
+    VideoFormatter(format, filename)
 
 
 if __name__ == '__main__':
