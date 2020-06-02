@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from operator import itemgetter
 import click
 import requests
@@ -90,13 +91,13 @@ def getVideos(id, resolution, filename):
               default='1080p',
               help='video resolution eg:720p')
 @click.option('-n', '--filename', default='video', help='video name')
-def main(id, resolution, filename):
+def wisty(id, resolution, filename):
     """
     Wistia video downloader command line tool\n
-    example: python run.py -i f5rf5rfr -r 1080p -n myvideo
+    example: wisty -i f5rf5rfr -r 1080p -n myvideo
     """
     getVideos(id, resolution, filename)
 
 
 if __name__ == '__main__':
-    main()
+    wisty()
