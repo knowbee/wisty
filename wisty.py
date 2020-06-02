@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+Author:Igwaneza Bruce
+Email:knowbeeinc@gmail.com
+"""
+
+
 from operator import itemgetter
 import click
 import requests
