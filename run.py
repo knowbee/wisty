@@ -13,7 +13,7 @@ sorted_videos = []
 
 
 def download(link, size, filename):
-    print("download process started")
+    print("now downloading", filename)
     with open(filename, 'wb') as f:
         response = requests.get(link, stream=True)
         total = response.headers.get('content-length')
@@ -30,8 +30,10 @@ def download(link, size, filename):
                 sys.stdout.write('\r[{}{}]'.format(
                     'o' * done, '.' * (50-done)))
                 sys.stdout.flush()
-    print("download finished!")
     sys.stdout.write('\n')
+    os.remove("data.json")
+    os.remove("data.txt")
+    print("download finished!" + "\n")
 
 
 def VideoFormatter(format, filename):
@@ -61,6 +63,7 @@ def VideoFormatter(format, filename):
 
 
 def getVideos(id, format, filename):
+    print("connecting to servers..", "\n")
     page = requests.get("http://fast.wistia.net/embed/iframe/" + id).text
     content = []
     findstr = r'W\.iframeInit\({"assets":(\[.*\])'
@@ -70,7 +73,6 @@ def getVideos(id, format, filename):
         content = assets.group(1)
         with open('data.txt', "w") as outfile:
             outfile.write(content.split("],")[0] + "]")
-            print("got data from wistia")
     VideoFormatter(format, filename)
 
 
@@ -82,11 +84,10 @@ def getVideos(id, format, filename):
 @click.option('-n', '--filename', default='video', help='video name')
 def main(id, format, filename):
     """
-    wistia video downloader command line tool\n
-    example: python run.py -i f5rf5rfr
+    Wistia video downloader command line tool\n
+    example: python run.py -i f5rf5rfr -f 1080p -n myvideo
     """
-    # getVideos(id, format)
-    VideoFormatter(format, filename)
+    getVideos(id, format, filename)
 
 
 if __name__ == '__main__':
