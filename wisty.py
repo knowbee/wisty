@@ -21,22 +21,27 @@ sorted_videos = []
 def downloader(link, size, filename):
     print("now downloading", filename)
     with open(filename, 'wb') as f:
-        response = requests.get(link, stream=True)
-        total = response.headers.get('content-length')
+        try:
 
-        if total is None:
-            f.write(response.content)
-        else:
-            downloaded = 0
-            total = int(total)
-            for data in response.iter_content(
-                    chunk_size=max(int(total / 1000), 1024 * 1024)):
-                downloaded += len(data)
-                f.write(data)
-                done = int(50 * downloaded / total)
-                sys.stdout.write('\r[{}{}]'.format('o' * done,
-                                                   '.' * (50 - done)))
-                sys.stdout.flush()
+            response = requests.get(link, stream=True)
+            total = response.headers.get('content-length')
+
+            if total is None:
+                print("invalid video id")
+                return
+            else:
+                downloaded = 0
+                total = int(total)
+                for data in response.iter_content(
+                        chunk_size=max(int(total / 1000), 1024 * 1024)):
+                    downloaded += len(data)
+                    f.write(data)
+                    done = int(50 * downloaded / total)
+                    sys.stdout.write('\r[{}{}]'.format('o' * done,
+                                                    '.' * (50 - done)))
+                    sys.stdout.flush()
+        except:
+            print("network error...try again")
     sys.stdout.write('\n')
     os.remove("data.txt")
     print("download finished!" + "\n")
@@ -78,16 +83,19 @@ def download(resolution, filename):
 
 def getVideos(id, resolution, filename):
     print("connecting to the servers..", "\n")
-    page = requests.get("http://fast.wistia.net/embed/iframe/" + id).text
-    content = []
-    findstr = r'W\.iframeInit\({"assets":(\[.*\])'
-    assets = re.search(findstr, page)
+    try:
+        page = requests.get("http://fast.wistia.net/embed/iframe/" + id).text
+        content = []
+        findstr = r'W\.iframeInit\({"assets":(\[.*\])'
+        assets = re.search(findstr, page)
 
-    if (assets):
-        content = assets.group(1)
-        with open('data.txt', "w") as outfile:
-            outfile.write(content.replace(",", "\n").split("]")[0] + "]")
-    download(resolution, filename)
+        if (assets):
+            content = assets.group(1)
+            with open('data.txt', "w") as outfile:
+                outfile.write(content.replace(",", "\n").split("]")[0] + "]")
+        download(resolution, filename)
+    except:
+        print("network error..try again")
 
 
 @click.command()
