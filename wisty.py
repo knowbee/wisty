@@ -48,38 +48,40 @@ def downloader(link, size, filename):
 
 
 def download(resolution, filename):
-    with open("data.txt") as f:
-        for line in f:
-            if (".bin" in line):
-                link = line.split('"url":')[1].split('"')[1].split('"')[0]
-                site = urlopen(link)
-                meta = site.info()
-                my_videos.append({
-                    "url":
-                    link,
-                    "video_size":
-                    math.ceil(int(meta["Content-Length"]) / float(1 << 20))
-                })
-        sorted_videos = sorted(my_videos,
-                               key=itemgetter('video_size'),
-                               reverse=True)
-        if ("1080" in resolution):
-            return downloader(sorted_videos[0]["url"],
-                              sorted_videos[0]["video_size"],
-                              filename + ".mp4")
-        elif ("720" in resolution):
-            return downloader(sorted_videos[1]["url"],
-                              sorted_videos[1]["video_size"],
-                              filename + ".mp4")
-        elif ("480" in resolution):
-            return downloader(sorted_videos[2]["url"],
-                              sorted_videos[2]["video_size"],
-                              filename + ".mp4")
-        else:
-            return downloader(sorted_videos[0]["url"],
-                              sorted_videos[0]["video_size"],
-                              filename + ".mp4")
-
+    try:
+        with open("data.txt") as f:
+            for line in f:
+                if (".bin" in line):
+                    link = line.split('"url":')[1].split('"')[1].split('"')[0]
+                    site = urlopen(link)
+                    meta = site.info()
+                    my_videos.append({
+                        "url":
+                        link,
+                        "video_size":
+                        math.ceil(int(meta["Content-Length"]) / float(1 << 20))
+                    })
+            sorted_videos = sorted(my_videos,
+                                key=itemgetter('video_size'),
+                                reverse=True)
+            if ("1080" in resolution):
+                return downloader(sorted_videos[0]["url"],
+                                sorted_videos[0]["video_size"],
+                                filename + ".mp4")
+            elif ("720" in resolution):
+                return downloader(sorted_videos[1]["url"],
+                                sorted_videos[1]["video_size"],
+                                filename + ".mp4")
+            elif ("480" in resolution):
+                return downloader(sorted_videos[2]["url"],
+                                sorted_videos[2]["video_size"],
+                                filename + ".mp4")
+            else:
+                return downloader(sorted_videos[0]["url"],
+                                sorted_videos[0]["video_size"],
+                                filename + ".mp4")
+    except:
+        print("invalid video id")
 
 def getVideos(id, resolution, filename):
     print("connecting to the servers..", "\n")
