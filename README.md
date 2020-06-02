@@ -4,6 +4,13 @@ wisty
 A fast minimal command line tool to download videos hosted on wistia with video id.
 
 
+Preview
+------------------------
+
+<p>
+    <img src="https://raw.githubusercontent.com/knowbee/hosting/master/assets/wisty.png" width="auto" height="auto"/>
+</p>
+
 How to get a video id ?
 ------------------------
 
