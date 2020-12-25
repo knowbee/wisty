@@ -94,8 +94,6 @@ def parser(resolution, filename):
                 download(sorted_videos[0]["url"],
                          filename + ".mp4")
     except:
-        click.echo(click.style(
-            "network too slow, try again later", fg="red"))
         sys.exit(0)
 
 
@@ -113,8 +111,6 @@ def fetch_all_resolutions(id, resolution, filename):
                 outfile.write(content.replace(",", "\n").split("]")[0] + "]")
         parser(resolution, filename)
     except:
-        click.echo(click.style(
-            "network too slow, try again later", fg="red"))
         sys.exit(0)
 
 
