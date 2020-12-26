@@ -8,7 +8,7 @@ with open(path.join(current_dir, "README.md"), "r") as f:
 
 setup(
     name="wisty",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/knowbee/wisty.git",
     author="Igwaneza Bruce",
     author_email="knowbeeinc@gmail.com",
