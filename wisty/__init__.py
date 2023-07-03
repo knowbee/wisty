@@ -3,136 +3,112 @@
 Author:Igwaneza Bruce
 Email:knowbeeinc@gmail.com
 """
-
-
-from operator import itemgetter
+import json
+import os
+import re
+import sys
 import click
 import requests
-import re
-import os
-import time
-import sys
-from urllib.request import urlopen
-import math
 from tqdm import tqdm
 
-all_videos = []
-sorted_videos = []
 
-
-def download(link, filename):
-    click.echo(click.style(
-        filename, fg="green"))
-    with open(filename, 'wb') as f:
+def download_video(link, filename):
+    click.echo(click.style(filename, fg="green"))
+    with open(filename, "wb") as file:
         try:
-
             response = requests.get(link, stream=True)
-            download_size = response.headers.get('content-length')
+            download_size = response.headers.get("content-length")
 
             if download_size is None:
                 download_size = len(response.raw.read())
                 if download_size is None:
-                    print("network too slow, try again later")
+                    print("Network is too slow. Please try again later.")
                 return
             else:
                 pbar = tqdm(
                     total=int(download_size),
                     initial=0,
-                    unit='B',
+                    unit="B",
                     unit_scale=True,
                     position=0,
-                    leave=True)
+                    leave=True,
+                )
                 for chunk in response.iter_content(chunk_size=1024):
                     if chunk:
-                        f.write(chunk)
-                        pbar.set_description("progress")
+                        file.write(chunk)
+                        pbar.set_description("Progress")
                         pbar.update(1024)
                 pbar.close()
         except:
-            click.echo(click.style(
-                "network too slow, try again later", fg="red"))
-    sys.stdout.write('\n')
-    os.remove("data.txt")
-    click.echo(click.style(
-        "finished !", fg="green"))
-    sys.exit(0)
+            click.echo(
+                click.style("Network is too slow. Please try again later.", fg="red")
+            )
+    sys.stdout.write("\n")
+    click.echo(click.style("Download complete!", fg="green"))
 
 
-def parser(resolution, filename):
+def parse_resolution(metadata, resolution, filename):
     try:
-        with open("data.txt") as f:
-            for line in f:
-                if (".bin" in line):
-                    link = line.split('"url":')[1].split('"')[1].split('"')[0]
-                    site = urlopen(link)
-                    meta = site.info()
-                    all_videos.append({
-                        "url":
-                        link,
-                        "video_size":
-                        math.ceil(int(meta["Content-Length"]) / float(1 << 20))
-                    })
-            sorted_videos = sorted(all_videos,
-                                   key=itemgetter('video_size'),
-                                   reverse=True)
-            if ("1080" in resolution):
-                download(sorted_videos[0]["url"],
-                         filename + ".mp4")
-            elif ("720" in resolution):
-                download(sorted_videos[1]["url"],
-                         filename + ".mp4")
-            elif ("540" in resolution):
-                download(sorted_videos[2]["url"],
-                         filename + ".mp4")
-            elif ("480" in resolution):
-                download(sorted_videos[3]["url"],
-                         filename + ".mp4")
-            elif ("360" in resolution):
-                download(sorted_videos[4]["url"],
-                         filename + ".mp4")
-            else:
-                download(sorted_videos[0]["url"],
-                         filename + ".mp4")
-    except:
+        with open(metadata, "r") as file:
+            res = json.load(file)
+
+            resolution_mapping = {
+                "1080p": 1080,
+                "720p": 720,
+                "540p": 540,
+                "480p": 480,
+                "360p": 360,
+            }
+
+            selected_resolution = resolution_mapping.get(resolution, 1080)
+            video_url = [x["url"] for x in res if x["height"] == selected_resolution][0]
+            download_video(video_url, filename + ".mp4")
+    except Exception as e:
+        print(e)
         sys.exit(0)
 
 
-def fetch_all_resolutions(id, resolution, filename):
-    print("connecting..", "\n")
+def fetch_resolutions(id, resolution, filename):
+    print("Connecting...\n")
+    import json
+
     try:
         page = requests.get("http://fast.wistia.net/embed/iframe/" + id).text
         content = []
-        findstr = r'W\.iframeInit\({"assets":(\[.*\])'
-        assets = re.search(findstr, page)
-
-        if (assets):
-            content = assets.group(1)
-            with open('data.txt', "w") as outfile:
-                outfile.write(content.replace(",", "\n").split("]")[0] + "]")
-        parser(resolution, filename)
-    except:
+        regex = r'"assets":(\[.*?\])'
+        match = re.search(regex, page)
+        if match:
+            content = json.loads(match.group(1))
+            with open("extract.json", "w") as outfile:
+                json.dump(content, outfile)
+        parse_resolution("extract.json", resolution, filename)
+    except Exception as e:
+        print(e)
         sys.exit(0)
 
 
 @click.command()
-@click.option('--id', '-i', help='wistia video id')
-@click.option('-r',
-              '--resolution',
-              default='1080p',
-              help='video resolution eg:720p')
-@click.option('-n', '--name', default='video', help='video name')
+@click.option("--id", "-i", help="Wistia video id")
+@click.option(
+    "-r", "--resolution", default="1080p", help="Video resolution (e.g., 720p)"
+)
+@click.option("-n", "--name", default="video", help="Video name")
 def main(id, resolution, name):
     """
     Wistia video downloader command line tool\n
-    example: wisty -i f5rf5rfr -r 1080p -n myvideo
+    Example: wisty -i f5rf5rfr -r 1080p -n myvideo
     """
-    if(len(sys.argv) == 1):
-        click.echo(click.style(
-            "missing required arguments: run wisty --help", fg="red"))
+    if len(sys.argv) == 1:
+        click.echo(
+            click.style(
+                "Missing required arguments. Run 'wisty --help' for help.", fg="red"
+            )
+        )
         sys.exit(0)
-    fetch_all_resolutions(id, resolution, name)
+    fetch_resolutions(id, resolution, name)
+    if os.path.exists("extract.json"):
+        os.remove("extract.json")
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     main()
