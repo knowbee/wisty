@@ -8,7 +8,7 @@ with open(path.join(current_dir, "README.md"), "r") as f:
 
 setup(
     name="wisty",
-    version="0.0.2",
+    version="1.0.0",
     url="https://github.com/knowbee/wisty.git",
     author="Igwaneza Bruce",
     author_email="knowbeeinc@gmail.com",
@@ -23,9 +23,7 @@ setup(
         "requests == 2.23.0",
         "tqdm==4.54.1",
     ],
-    entry_points={
-        "console_scripts": ['wisty = wisty:main']
-    },
+    entry_points={"console_scripts": ["wisty = wisty:main"]},
     classifiers=[
         "Environment :: Console",
         "Intended Audience :: Developers",
